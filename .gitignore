@@ -62,6 +62,9 @@ scripts/test_*.py
 # Real-LLM validation result artifacts
 real_*_result.json
 
+# Runtime status snapshot
+status.json
+
 
 # Rust / Tauri
 gui/src-tauri/target/

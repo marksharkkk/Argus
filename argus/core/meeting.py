@@ -422,6 +422,14 @@ class MeetingEngine:
         """Return a meeting by ID."""
         return self._meetings.get(meeting_id)
 
+    def list_meetings(self) -> list[Meeting]:
+        """Return all meetings, most recent first."""
+        return sorted(
+            self._meetings.values(),
+            key=lambda m: m.created_at,
+            reverse=True,
+        )
+
     def _validate_node(self, node_id: str) -> None:
         if self.router.tree.get_node(node_id) is None:
             raise ValueError(f"Unknown node: {node_id}")

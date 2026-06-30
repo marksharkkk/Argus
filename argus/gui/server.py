@@ -250,6 +250,10 @@ def make_app(orchestrator: ArgusOrchestrator) -> FastAPI:
             if node_id in msg.to or msg.from_id == node_id
         ]
 
+    @app.get("/api/meetings")
+    def list_meetings() -> list[dict[str, Any]]:
+        return [m.to_transcript() for m in state.meeting_engine.list_meetings()]
+
     @app.post("/api/meetings")
     async def post_meeting(payload: MeetingPayload) -> dict[str, Any]:
         meeting = await state.meeting_engine.start_meeting(

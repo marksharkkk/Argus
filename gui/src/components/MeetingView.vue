@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { fetchJson, connectWebSocket } from '../api'
 import type { Meeting, ArgusNode } from '../types'
 
@@ -9,25 +9,35 @@ const selectedMeeting = ref<Meeting | null>(null)
 const organizer = ref('')
 const participants = ref<string[]>([])
 const topic = ref('')
+const takeoverTopic = ref('')
+
+let refreshInterval: number | undefined
 
 onMounted(async () => {
   await loadNodes()
-  await loadMeetings()
+  await loadMeetingsList()
+  refreshInterval = window.setInterval(loadMeetingsList, 5000)
   connectWebSocket((msg) => {
     const meetingId = msg.metadata?.meeting_id
-    if (meetingId && selectedMeeting.value?.id === meetingId) {
-      loadMeeting(meetingId)
+    if (meetingId) {
+      loadMeetingsList()
+      if (selectedMeeting.value?.id === meetingId) {
+        loadMeeting(meetingId)
+      }
     }
   })
+})
+
+onUnmounted(() => {
+  if (refreshInterval) window.clearInterval(refreshInterval)
 })
 
 async function loadNodes() {
   nodes.value = await fetchJson('/api/nodes')
 }
 
-async function loadMeetings() {
-  // The backend does not have a list endpoint, so we rely on the selected/in-memory ones.
-  // Refresh current selected meeting if any.
+async function loadMeetingsList() {
+  meetings.value = await fetchJson('/api/meetings')
   if (selectedMeeting.value) {
     await loadMeeting(selectedMeeting.value.id)
   }
@@ -53,20 +63,34 @@ async function closeMeeting() {
   await loadMeeting(selectedMeeting.value.id)
 }
 
-function toggleParticipant(id: string) {
-  if (participants.value.includes(id)) {
-    participants.value = participants.value.filter((p) => p !== id)
-  } else {
-    participants.value.push(id)
-  }
+async function skipTurn() {
+  if (!selectedMeeting.value) return
+  await fetchJson(`/api/meetings/${selectedMeeting.value.id}/command`, {
+    method: 'POST',
+    body: JSON.stringify({ command: 'skip_turn' }),
+  })
+  await loadMeeting(selectedMeeting.value.id)
 }
+
+async function updateTopic() {
+  if (!selectedMeeting.value || !takeoverTopic.value.trim()) return
+  await fetchJson(`/api/meetings/${selectedMeeting.value.id}/command`, {
+    method: 'POST',
+    body: JSON.stringify({ command: 'update_topic', payload: takeoverTopic.value.trim() }),
+  })
+  takeoverTopic.value = ''
+  await loadMeeting(selectedMeeting.value.id)
+}
+
 </script>
 
 <template>
   <div class="meeting-view">
     <aside class="meeting-list">
       <h3>会议</h3>
+      <div v-if="meetings.length === 0" class="empty-list">暂无会议</div>
       <button v-for="m in meetings" :key="m.id" :class="{ active: selectedMeeting?.id === m.id }" @click="loadMeeting(m.id)">
+        <span class="status-dot" :class="m.status" />
         {{ m.topic }}
       </button>
     </aside>
@@ -80,7 +104,7 @@ function toggleParticipant(id: string) {
       <label>参与者</label>
       <div class="participant-checks">
         <label v-for="n in nodes" :key="n.id">
-          <input type="checkbox" :checked="participants.includes(n.id)" @change="toggleParticipant(n.id)" />
+          <input v-model="participants" type="checkbox" :value="n.id" />
           {{ n.label }}
         </label>
       </div>
@@ -90,7 +114,11 @@ function toggleParticipant(id: string) {
 
       <div v-if="selectedMeeting" class="meeting-detail">
         <h4>{{ selectedMeeting.topic }}</h4>
-        <p>组织者: {{ selectedMeeting.organizer }} | 参与者: {{ selectedMeeting.participants.join(', ') }} | 状态: {{ selectedMeeting.status }}</p>
+        <p class="meta-line">
+          组织者: {{ selectedMeeting.organizer }}
+          | 参与者: {{ selectedMeeting.participants.join(', ') }}
+          | 状态: <span class="status-badge" :class="selectedMeeting.status">{{ selectedMeeting.status }}</span>
+        </p>
         <div class="history">
           <div v-for="(entry, idx) in selectedMeeting.messages" :key="idx" class="entry">
             <strong>{{ entry.speaker }}</strong>
@@ -98,7 +126,17 @@ function toggleParticipant(id: string) {
             <p>{{ entry.text }}</p>
           </div>
         </div>
-        <button v-if="selectedMeeting.status === 'running'" class="danger" @click="closeMeeting">结束会议</button>
+        <div v-if="selectedMeeting.status === 'running'" class="takeover">
+          <h4>Human 接管</h4>
+          <div class="takeover-row">
+            <button class="secondary" @click="skipTurn">跳过当前发言</button>
+          </div>
+          <div class="takeover-row">
+            <input v-model="takeoverTopic" placeholder="新主题" />
+            <button class="secondary" @click="updateTopic">更新主题</button>
+          </div>
+          <button class="danger" @click="closeMeeting">结束会议</button>
+        </div>
       </div>
     </div>
   </div>
@@ -131,10 +169,64 @@ function toggleParticipant(id: string) {
   border: 1px solid transparent;
 }
 
+.meeting-list button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .meeting-list button.active,
 .meeting-list button:hover {
   background: rgba(56, 189, 248, 0.15);
   border-color: var(--accent);
+}
+
+.empty-list {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--muted);
+}
+
+.status-dot.running {
+  background: var(--agent);
+}
+
+.status-dot.closed {
+  background: #ef4444;
+}
+
+.meta-line {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: var(--muted);
+  color: #0f172a;
+}
+
+.status-badge.running {
+  background: var(--agent);
+}
+
+.status-badge.closed {
+  background: #ef4444;
+  color: #fff;
 }
 
 .meeting-form {
@@ -188,5 +280,39 @@ function toggleParticipant(id: string) {
 .danger {
   background: #ef4444;
   color: white;
+}
+
+.takeover {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.takeover h4 {
+  margin: 0;
+  color: var(--human);
+}
+
+.takeover-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.takeover-row input {
+  flex: 1;
+}
+
+.takeover-row button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.secondary {
+  background: var(--accent);
+  color: #0f172a;
 }
 </style>

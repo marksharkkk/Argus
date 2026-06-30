@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="960" height="540">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="540" fill="url(#bg)" rx="12"/>
+
+  <text x="480" y="48" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="26" font-weight="700">Inbox 持久化：离线不断线，上线自动补发</text>
+  <text x="480" y="78" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="15">消息进入 inbox 文件落盘，Agent 工作不阻塞，human 回来一键 drain</text>
+
+  <!-- Agent sending -->
+  <g transform="translate(80, 180)">
+    <rect width="140" height="70" rx="12" fill="#10b981" opacity="0.15" stroke="#10b981" stroke-width="2"/>
+    <text x="70" y="30" text-anchor="middle" fill="#10b981" font-family="system-ui, sans-serif" font-size="16" font-weight="700">🤖 dev</text>
+    <text x="70" y="52" text-anchor="middle" fill="#34d399" font-family="system-ui, sans-serif" font-size="13">发送消息</text>
+  </g>
+
+  <!-- Message arrows to human (offline) -->
+  <path d="M 220 215 L 340 215" stroke="#38bdf8" stroke-width="3" marker-end="url(#msgArrow)"/>
+  <defs>
+    <marker id="msgArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#38bdf8"/>
+    </marker>
+  </defs>
+
+  <!-- Inbox box -->
+  <g transform="translate(360, 170)">
+    <rect width="200" height="120" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+    <text x="100" y="30" text-anchor="middle" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="16" font-weight="700">📥 Inbox</text>
+    <text x="100" y="52" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">human.inbox.json</text>
+    <rect x="30" y="65" width="140" height="18" rx="4" fill="#334155"/>
+    <rect x="30" y="88" width="100" height="18" rx="4" fill="#334155"/>
+    <text x="100" y="112" text-anchor="middle" fill="#64748b" font-family="system-ui, sans-serif" font-size="12">持久化到磁盘</text>
+  </g>
+
+  <!-- Human offline indicator -->
+  <g transform="translate(400, 310)">
+    <circle cx="10" cy="10" r="8" fill="#64748b"/>
+    <text x="30" y="15" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="14" font-weight="700">human 离线</text>
+  </g>
+
+  <!-- Agent keeps working -->
+  <g transform="translate(620, 180)">
+    <rect width="160" height="70" rx="12" fill="#10b981" opacity="0.15" stroke="#10b981" stroke-width="2"/>
+    <text x="80" y="30" text-anchor="middle" fill="#10b981" font-family="system-ui, sans-serif" font-size="16" font-weight="700">🤖 writer</text>
+    <text x="80" y="52" text-anchor="middle" fill="#34d399" font-family="system-ui, sans-serif" font-size="13">继续工作</text>
+  </g>
+  <text x="700" y="280" text-anchor="middle" fill="#64748b" font-family="system-ui, sans-serif" font-size="13">不阻塞其他 Agent</text>
+
+  <!-- Human comes online -->
+  <g transform="translate(360, 380)">
+    <rect width="240" height="60" rx="12" fill="#f59e0b" opacity="0.15" stroke="#f59e0b" stroke-width="2"/>
+    <text x="120" y="28" text-anchor="middle" fill="#f59e0b" font-family="system-ui, sans-serif" font-size="16" font-weight="700">👤 human 上线</text>
+    <text x="120" y="48" text-anchor="middle" fill="#fbbf24" font-family="system-ui, sans-serif" font-size="13">自动 drain inbox，离线消息一次性推送</text>
+  </g>
+
+  <!-- Arrow from inbox to online human -->
+  <path d="M 460 290 L 460 370" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6,4" marker-end="url(#onlineArrow)"/>
+  <defs>
+    <marker id="onlineArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="510" text-anchor="middle" fill="#64748b" font-family="system-ui, sans-serif" font-size="14">每个 human 节点独立 inbox · 容量上限 1000 条 · 重启后仍可恢复</text>
+</svg>

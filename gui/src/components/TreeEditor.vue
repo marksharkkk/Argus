@@ -26,14 +26,33 @@ onMounted(async () => {
 
 async function loadTree() {
   const tree: ArgusTree = await fetchJson('/api/tree')
-  const nodes: Node[] = tree.nodes.map((node, idx) => ({
-    id: node.id,
-    type: 'default',
-    position: { x: 80 + (idx % 4) * 220, y: 80 + Math.floor(idx / 4) * 160 },
-    label: node.label,
-    class: node.type,
-    data: { raw: node },
-  }))
+  const humans = tree.nodes.filter((n) => n.type === 'human')
+  const agents = tree.nodes.filter((n) => n.type === 'agent')
+
+  const nodes: Node[] = []
+  humans.forEach((node, idx) => {
+    nodes.push({
+      id: node.id,
+      type: 'default',
+      position: { x: 80, y: 120 + idx * 160 },
+      label: node.label,
+      class: node.type,
+      style: { width: '140px', textAlign: 'center' },
+      data: { raw: node },
+    })
+  })
+  agents.forEach((node, idx) => {
+    nodes.push({
+      id: node.id,
+      type: 'default',
+      position: { x: 240, y: 80 + idx * 160 },
+      label: node.label,
+      class: node.type,
+      style: { width: '140px', textAlign: 'center' },
+      data: { raw: node },
+    })
+  })
+
   const edges: Edge[] = tree.edges.map((edge) => ({
     id: `${edge.from}-${edge.to}`,
     source: edge.from,
@@ -175,7 +194,7 @@ function formatMeta(value: Record<string, any> | undefined): string {
     </div>
 
     <div class="canvas" @drop="onDrop" @dragover="onDragOver">
-      <VueFlow v-model="elements" @connect="onConnect" @node-click="onNodeClick" @edge-click="onEdgeClick" fit-view-on-init>
+      <VueFlow v-model="elements" :default-viewport="{ x: 0, y: 0, zoom: 1 }" @connect="onConnect" @node-click="onNodeClick" @edge-click="onEdgeClick">
         <Background />
       </VueFlow>
     </div>
@@ -225,7 +244,7 @@ function formatMeta(value: Record<string, any> | undefined): string {
 }
 
 .palette {
-  width: 160px;
+  width: 120px;
   flex-shrink: 0;
   background: var(--panel);
   border-right: 1px solid var(--border);
@@ -264,7 +283,7 @@ function formatMeta(value: Record<string, any> | undefined): string {
 }
 
 .properties {
-  width: 260px;
+  width: 180px;
   flex-shrink: 0;
   background: var(--panel);
   border-left: 1px solid var(--border);
@@ -312,6 +331,15 @@ function formatMeta(value: Record<string, any> | undefined): string {
 </style>
 
 <style>
+.vue-flow__node {
+  min-width: 120px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  border-width: 2px;
+}
+
 .vue-flow__node.human {
   background: var(--human);
   color: #0f172a;

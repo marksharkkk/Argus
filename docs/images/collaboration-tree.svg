@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="960" height="540">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrow-bi" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="960" height="540" fill="url(#bg)" rx="12"/>
+
+  <text x="480" y="48" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="26" font-weight="700">协作树：定义谁可以与谁沟通</text>
+  <text x="480" y="78" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="15">有向边控制消息可达性，human 与 agent、agent 与 agent 之间的链路一目了然</text>
+
+  <!-- Human node -->
+  <g transform="translate(220, 260)">
+    <rect width="140" height="70" rx="12" fill="#f59e0b" opacity="0.15" stroke="#f59e0b" stroke-width="2"/>
+    <text x="70" y="30" text-anchor="middle" fill="#f59e0b" font-family="system-ui, sans-serif" font-size="16" font-weight="700">👤 human</text>
+    <text x="70" y="52" text-anchor="middle" fill="#fbbf24" font-family="system-ui, sans-serif" font-size="13">人类节点</text>
+  </g>
+
+  <!-- Agent nodes -->
+  <g transform="translate(600, 170)">
+    <rect width="140" height="70" rx="12" fill="#10b981" opacity="0.15" stroke="#10b981" stroke-width="2"/>
+    <text x="70" y="30" text-anchor="middle" fill="#10b981" font-family="system-ui, sans-serif" font-size="16" font-weight="700">🤖 dev</text>
+    <text x="70" y="52" text-anchor="middle" fill="#34d399" font-family="system-ui, sans-serif" font-size="13">开发 Agent</text>
+  </g>
+
+  <g transform="translate(600, 350)">
+    <rect width="140" height="70" rx="12" fill="#10b981" opacity="0.15" stroke="#10b981" stroke-width="2"/>
+    <text x="70" y="30" text-anchor="middle" fill="#10b981" font-family="system-ui, sans-serif" font-size="16" font-weight="700">🤖 writer</text>
+    <text x="70" y="52" text-anchor="middle" fill="#34d399" font-family="system-ui, sans-serif" font-size="13">写作 Agent</text>
+  </g>
+
+  <!-- Edges -->
+  <line x1="360" y1="280" x2="600" y2="200" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="600" y1="200" x2="360" y2="290" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-bi)"/>
+
+  <line x1="360" y1="300" x2="600" y2="380" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="600" y1="380" x2="360" y2="310" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-bi)"/>
+
+  <line x1="670" y1="240" x2="670" y2="350" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="655" y1="350" x2="655" y2="240" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-bi)"/>
+
+  <text x="480" y="490" text-anchor="middle" fill="#64748b" font-family="system-ui, sans-serif" font-size="14">实线 = 消息可发送  ·  虚线 = 反向可回复  ·  无连接 = 不可达</text>
+</svg>

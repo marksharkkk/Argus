@@ -26,7 +26,8 @@ async function load() {
 <template>
   <div class="status-view">
     <h2>节点状态</h2>
-    <table>
+    <div class="table-wrap">
+      <table>
       <thead>
         <tr>
           <th>ID</th>
@@ -50,6 +51,7 @@ async function load() {
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </template>
 
@@ -57,6 +59,10 @@ async function load() {
 .status-view {
   padding: 1rem;
   overflow-y: auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
 }
 
 table {

@@ -17,6 +17,18 @@ Argus 是一个多 Agent 协作编排平台，它在 [nanobot](https://github.co
 - **可视化 GUI**：基于 Tauri 2.0 + Vue 3 的桌面客户端，支持拖拽编辑协作树、聊天视图、会议视图与状态面板。
 - **CLI Gateway**：`argus onboard` / `argus gateway` / `argus agent` / `argus status` 命令行入口。
 
+## 功能展示
+
+想要快速了解 Argus 能做什么，可以查看 [docs/showcase.md](docs/showcase.md)。下面是 GUI 主要界面的截图预览：
+
+| 协作树编辑 | 节点聊天 |
+|------------|----------|
+| ![Tree](docs/images/screenshots/argus-gui-tree.png) | ![Chat](docs/images/screenshots/argus-gui-chat.png) |
+
+| 会议视图 | 状态面板 |
+|----------|----------|
+| ![Meeting](docs/images/screenshots/argus-gui-meeting.png) | ![Status](docs/images/screenshots/argus-gui-status.png) |
+
 ## 快速安装
 
 需要 Python 3.11+。

@@ -4,14 +4,27 @@ import TreeEditor from './components/TreeEditor.vue'
 import ChatView from './components/ChatView.vue'
 import MeetingView from './components/MeetingView.vue'
 import StatusView from './components/StatusView.vue'
-import { connectWebSocket } from './api'
+import { fetchJson, connectWebSocket } from './api'
+import type { ArgusNode } from './types'
 
 const view = ref<'tree' | 'chat' | 'meeting' | 'status'>('tree')
 const selectedNode = ref<string | null>(null)
 const wsStatus = ref<'connected' | 'disconnected'>('disconnected')
 let ws: WebSocket | null = null
 
-onMounted(() => {
+onMounted(async () => {
+  let nodes: ArgusNode[] = []
+  for (let i = 0; i < 10; i++) {
+    try {
+      nodes = await fetchJson('/api/nodes')
+      break
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    }
+  }
+  const human = nodes.find((n) => n.type === 'human')
+  selectedNode.value = human ? human.id : (nodes[0]?.id ?? null)
+
   ws = connectWebSocket((msg) => {
     if (msg.type === 'pong') return
     wsStatus.value = 'connected'
@@ -60,7 +73,7 @@ onUnmounted(() => {
 }
 
 .sidebar {
-  width: 180px;
+  width: 140px;
   background: var(--panel);
   border-right: 1px solid var(--border);
   display: flex;

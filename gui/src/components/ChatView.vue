@@ -50,7 +50,18 @@ async function loadMessages() {
 
 async function send() {
   if (!props.nodeId || !text.value.trim()) return
-  const to = isGroup.value ? [] : (targets.value.length > 1 ? [targets.value[1]] : [props.nodeId])
+  let to: string[]
+  if (isGroup.value) {
+    to = []
+  } else {
+    const mentions = targets.value.filter((id) => id !== props.nodeId)
+    if (mentions.length === 0) {
+      status.value = '私聊请 @ 指定接收者'
+      setTimeout(() => (status.value = ''), 2000)
+      return
+    }
+    to = [mentions[0]]
+  }
   await fetchJson('/api/messages', {
     method: 'POST',
     body: JSON.stringify({ from_id: props.nodeId, to, text: text.value }),
@@ -80,6 +91,9 @@ function insertMention(id: string) {
         <button v-for="n in nodes" :key="n.id" @click="insertMention(n.id)">@{{ n.id }}</button>
       </div>
       <div class="messages">
+        <div v-if="messages.length === 0" class="empty-msgs">
+          暂无消息，发送一条开始对话
+        </div>
         <div
           v-for="msg in messages"
           :key="msg.id"
@@ -151,6 +165,12 @@ function insertMention(id: string) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.empty-msgs {
+  margin: auto;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .message {
