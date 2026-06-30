@@ -1,0 +1,41 @@
+# Example Argus collaboration tree: simple 3-person team
+nodes:
+  - id: human
+    label: "我"
+    type: human
+    delivery:
+      channel: telegram
+      chat_id: "YOUR_CHAT_ID"
+    metadata:
+      role: "project owner"
+
+  - id: dev
+    label: "开发"
+    type: agent
+    agent_id: coding
+    model: openrouter/openai/gpt-4o
+    metadata:
+      role: "software developer"
+      skills: ["python", "typescript"]
+
+  - id: writer
+    label: "写作"
+    type: agent
+    agent_id: writing
+    model: openrouter/openai/gpt-4o
+    metadata:
+      role: "technical writer"
+      skills: ["documentation", "markdown"]
+
+edges:
+  - from: human
+    to: dev
+    bidirectional: true
+
+  - from: human
+    to: writer
+    bidirectional: true
+
+  - from: dev
+    to: writer
+    bidirectional: true

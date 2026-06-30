@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Test & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+*.err
+*.err.log
+
+# Local runtime data / secrets
+.mock-argus/
+.real-test-argus/
+
+# Runtime-generated memory content (keep sample .md files and .gitkeep placeholders)
+memory/human_inboxes/
+memory/meetings/*.md
+memory/projects/*.md
+memory/agents/*.md
+memory/modes/*.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# nanobot archive (source already vendored)
+nanobot-main.zip
+
+# Ad-hoc development / real-LLM scripts (keep locally, don't commit)
+scripts/check_*.py
+scripts/run_*.py
+scripts/test_*.py
+!scripts/validate_human_features.py
+
+# Real-LLM validation result artifacts
+real_*_result.json
+
+
+# Rust / Tauri
+gui/src-tauri/target/
+gui/src-tauri/gen/schemas/*.json
+
+# Node / frontend
+gui/node_modules/
+gui/dist/
+*.local
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+secrets.json
+/config.json
+*.key
+*.pem
+

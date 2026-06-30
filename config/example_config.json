@@ -1,0 +1,27 @@
+{
+  "agents": {
+    "defaults": {
+      "model": "deepseek-v4-flash",
+      "provider": "deepseek",
+      "maxTokens": 2048,
+      "temperature": 0.7,
+      "workspace": "./nanobot_workspace"
+    }
+  },
+  "providers": {
+    "deepseek": {
+      "apiKey": "YOUR_API_KEY_HERE",
+      "apiBase": "https://api.deepseek.com"
+    }
+  },
+  "argus": {
+    "collaboration_tree": "./collaboration_tree.yaml",
+    "memory_dir": "./memory",
+    "gui": {
+      "host": "127.0.0.1",
+      "port": 18791
+    },
+    "api_host": "127.0.0.1",
+    "api_port": 18792
+  }
+}
