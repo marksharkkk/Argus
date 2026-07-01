@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import signal
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -17,7 +17,6 @@ from typing import Any
 from loguru import logger
 
 from argus.adapters.mock_agent import MockAgentNode
-from argus.adapters.nanobot_agent import NanobotAgentNode
 from argus.config.schema import ArgusConfig
 from argus.core.bus import ArgusBus
 from argus.core.human import HumanHandler, HumanNodeManager
@@ -26,7 +25,7 @@ from argus.core.router import MessageRouter
 from argus.core.tree import CollaborationTree, Node
 from argus.memory.store import MemoryStore
 
-AgentFactory = Callable[[Node], NanobotAgentNode]
+AgentFactory = Callable[[Node], MockAgentNode]
 
 
 class ArgusOrchestrator:
@@ -57,10 +56,8 @@ class ArgusOrchestrator:
             storage_dir=self._default_human_inbox_dir(),
         )
         self.router = MessageRouter(tree, self.bus, human_manager=self.human_manager)
-        self._agent_factory = agent_factory or (
-            self._mock_agent_factory if mock else self._default_agent_factory
-        )
-        self._agents: dict[str, NanobotAgentNode] = {}
+        self._agent_factory = agent_factory or self._mock_agent_factory
+        self._agents: dict[str, MockAgentNode] = {}
         self._registered_human_handlers: set[str] = set()
 
         self._health_task: asyncio.Task[Any] | None = None
@@ -80,18 +77,8 @@ class ArgusOrchestrator:
         memory_dir = Path(self.config.argus.memory_dir).expanduser()
         return memory_dir / "human_inboxes"
 
-    def _default_agent_factory(self, node: Node) -> NanobotAgentNode:
-        """Create a real nanobot-backed agent node."""
-        return NanobotAgentNode(
-            node=node,
-            tree=self.tree,
-            argus_bus=self.bus,
-            config=self.config,
-            workspace=self.workspace,
-        )
-
     def _mock_agent_factory(self, node: Node) -> MockAgentNode:
-        """Create a mock agent node for smoke testing."""
+        """Create a mock agent node for smoke testing and demos."""
         return MockAgentNode(
             node=node,
             tree=self.tree,

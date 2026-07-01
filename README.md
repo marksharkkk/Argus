@@ -1,12 +1,6 @@
 # Argus
 
-Argus 是一个多 Agent 协作编排平台，它在 [nanobot](https://github.com/nanobot-dev/nanobot) 之上构建了一层可视化协作编排层，让人类可以通过协作树（Collaboration Tree）自由定义自己与多个 AI Agent 的通信拓扑，实现私聊、群聊、会议等原生多 Agent 协作模式，并建立可传承的团队记忆系统。
-
-## 与 nanobot / OpenClaw 的关系
-
-- **nanobot** 是一个轻量级个人 AI Agent 运行时，提供单 Agent 会话、工具调用、Subagent、多渠道接入等核心能力，可视为 OpenClaw 理念的简化实现。
-- **Argus** 不修改 nanobot 核心代码，而是将其作为 Agent 运行时库，通过 `argus/adapters/nanobot_agent.py` 适配层在同一进程内运行多个 nanobot `AgentLoop` 实例。
-- **OpenClaw** 是更宏大的多 Agent 框架愿景；Argus 以 nanobot 为基石，探索并实现其中“多人/多 Agent 协作”这一部分。
+Argus 是一个多 Agent 协作编排平台，让人类可以通过协作树（Collaboration Tree）自由定义自己与多个 AI Agent 的通信拓扑，实现私聊、群聊、会议等原生多 Agent 协作模式，并建立可传承的团队记忆系统。
 
 ## 核心特性
 
@@ -39,7 +33,7 @@ cd argus
 pip install -e .
 ```
 
-安装后会同时获得 `argus` 包与项目内嵌的 `nanobot` 包，以及 `argus` 命令行入口。
+安装后会获得 `argus` 包与 `argus` 命令行入口。
 
 ## 快速开始
 
@@ -95,13 +89,12 @@ argus agent --node human -m "@dev 你好，请帮我看一下这个需求"
 ```
 argus/
 ├── argus/                  # Argus 主包
-│   ├── adapters/           # nanobot Agent 适配层
+│   ├── adapters/           # Agent 运行时适配层
 │   ├── cli/                # Typer CLI
 │   ├── config/             # 配置 schema 与加载器
 │   ├── core/               # 协作树、消息总线、路由器、会议引擎、编排器
 │   ├── gui/                # GUI 后端 FastAPI/UVicorn 服务
 │   └── memory/             # 五层记忆存储
-├── nanobot/                # nanobot 源码子包（运行时库）
 ├── gui/                    # Tauri 2.0 + Vue 3 桌面前端
 ├── config/                 # 示例协作树配置
 ├── memory/                 # 示例记忆目录

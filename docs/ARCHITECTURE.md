@@ -24,15 +24,8 @@
 │  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
 │  ┌─────────────┐  ┌─────────────┐                                │
 │  │ Adapters    │  │ GUI backend │                                │
-│  │ nanobot_agent│  │ server.py   │                                │
+│  │ mock_agent  │  │ server.py   │                                │
 │  └─────────────┘  └─────────────┘                                │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   nanobot 运行时库 (nanobot/)                    │
-│  AgentLoop / AgentRunner / ToolRegistry / SessionManager         │
-│  Provider / ChannelManager / Skills                              │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -51,11 +44,11 @@
 
 ### `argus/adapters/`
 
-`nanobot_agent.py` 是 Argus 与 nanobot 之间的唯一集成边界：
+`mock_agent.py` 提供 Argus 内置的 Agent 运行时适配：
 
-- 为每个 `agent` 节点创建独立的 `AgentLoop`、`SessionManager` 与 `ToolRegistry`。
-- 注入 Argus 专属工具 `argus_send_message`，使 Agent 可以向协作树中的可达节点发送消息。
-- 通过 `_ArgusSystemPromptHook` 向 Agent 系统提示追加当前节点 ID、可达节点、通信规则等上下文。
+- 为每个 `agent` 节点创建独立的 `MockAgentNode` 实例。
+- 模拟 Agent 接收消息、思考并回复的生命周期，用于无 LLM 成本的演示与测试。
+- 注入 Argus 专属上下文（当前节点 ID、可达节点、通信规则）。
 - 提供 `start` / `stop` / `send_to_agent` / `status` 生命周期接口。
 
 ### `argus/memory/`
@@ -89,7 +82,7 @@
 
 ### `argus/config/`
 
-- `schema.py`：`ArgusConfig` 继承 nanobot `Config`，新增 `argus` 专属字段。
+- `schema.py`：`ArgusConfig` 定义 Argus 专属配置字段，包括 API 提供商、Agent 默认值、工具配置与 GUI 参数。
 - `loader.py`：加载/保存 `~/.argus/config.json`，支持自动补全缺失字段。
 
 ## 协作树数据模型
@@ -125,7 +118,7 @@ edges:
    - 私聊：检查 `tree.can_communicate(from, target)`，通过则交付。
    - 群聊：计算 `reachable ∩ target` 或 `@mention` 过滤后的集合，逐个交付。
 4. **交付**：
-   - 目标为 `agent`：调用 `NanobotAgentNode.send_to_agent`，将消息注入该 Agent 的 nanobot 入站队列。
+   - 目标为 `agent`：调用 `MockAgentNode.send_to_agent`，将消息注入该 Agent 的入站队列。
    - 目标为 `human`：调用注册的人类 handler（CLI 打印、channel 发送、GUI 推送等）。
 
 群聊 `@mention` 规则：
@@ -136,15 +129,15 @@ edges:
 
 ## Agent 适配层说明
 
-`NanobotAgentNode` 封装一个 nanobot Agent 实例：
+`MockAgentNode` 封装一个轻量级 Agent 运行时实例：
 
 1. 接收 `Node`、`CollaborationTree`、`ArgusBus`、`ArgusConfig`、工作目录。
-2. 根据 `node.model` 或配置默认值选择 LLM Provider。
-3. 创建独立的 `AgentLoop`，并注入 `ArgusSendMessageTool`。
-4. 启动时向 `ArgusBus` 注册节点；停止时关闭 `AgentLoop` 与 MCP。
-5. `send_to_agent(text)` 将 Argus 消息包装为 nanobot `InboundMessage` 推入 Agent 队列。
+2. 为每个节点维护独立的任务与入站队列。
+3. 启动时向 `ArgusBus` 注册节点；停止时取消后台任务。
+4. `send_to_agent(text)` 将 Argus 消息推入 Agent 的入站队列。
+5. Agent 处理消息后，通过 `ArgusBus` 将回复发送回目标节点，形成闭环。
 
-`ArgusSendMessageTool.execute` 负责把 Agent 的回复重新发送到 `ArgusBus`，形成闭环。
+> 注：当前默认运行时用于零 LLM 成本的演示与测试。后续可替换为直接调用 LLM API 的适配器，无需改动 `ArgusOrchestrator` 与 `MessageRouter`。
 
 ## 记忆传承系统五层结构
 

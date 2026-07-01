@@ -50,10 +50,7 @@ memory/modes/*.md
 .DS_Store
 Thumbs.db
 
-# nanobot archive (source already vendored)
-nanobot-main.zip
-
-# Ad-hoc development / real-LLM scripts (keep locally, don't commit)
+# Ad-hoc development scripts (keep locally, don't commit)
 scripts/check_*.py
 scripts/run_*.py
 scripts/test_*.py

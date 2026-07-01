@@ -1,10 +1,9 @@
-"""Argus configuration schema extending nanobot."""
+"""Argus configuration schema."""
 
+from pathlib import Path
 from typing import Any
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
-
-from nanobot.config.schema import Base, Config
 
 
 class ArgusGuiConfig(BaseModel):
@@ -16,7 +15,85 @@ class ArgusGuiConfig(BaseModel):
     port: int = 18791
 
 
-class ArgusExtensionConfig(Base):
+class ProviderConfig(BaseModel):
+    """Configuration for a single LLM provider."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("api_key", "apiKey"),
+    )
+    api_base: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("api_base", "apiBase"),
+    )
+    extra_headers: dict[str, str] | None = Field(
+        default=None,
+        validation_alias=AliasChoices("extra_headers", "extraHeaders"),
+    )
+
+
+class AgentDefaults(BaseModel):
+    """Default settings for agent nodes."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    model: str = "mock"
+    provider: str = "mock"
+    max_tokens: int = Field(
+        default=2048,
+        validation_alias=AliasChoices("max_tokens", "maxTokens"),
+    )
+    temperature: float = 0.7
+    max_tool_iterations: int = Field(
+        default=5,
+        validation_alias=AliasChoices("max_tool_iterations", "maxToolIterations"),
+    )
+    context_window_tokens: int = Field(
+        default=8192,
+        validation_alias=AliasChoices("context_window_tokens", "contextWindowTokens"),
+    )
+    context_block_limit: int = Field(
+        default=5,
+        validation_alias=AliasChoices("context_block_limit", "contextBlockLimit"),
+    )
+    max_tool_result_chars: int = Field(
+        default=4000,
+        validation_alias=AliasChoices("max_tool_result_chars", "maxToolResultChars"),
+    )
+    provider_retry_mode: str = Field(
+        default="simple",
+        validation_alias=AliasChoices("provider_retry_mode", "providerRetryMode"),
+    )
+    timezone: str = "UTC"
+    reasoning_effort: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("reasoning_effort", "reasoningEffort"),
+    )
+
+
+class AgentsConfig(BaseModel):
+    """Agent-level configuration block."""
+
+    defaults: AgentDefaults = Field(default_factory=AgentDefaults)
+
+
+class ToolConfig(BaseModel):
+    """Tool-related configuration placeholders."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    web: dict[str, Any] = Field(default_factory=dict)
+    exec: dict[str, Any] = Field(default_factory=dict)
+    restrict_to_workspace: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("restrict_to_workspace", "restrictToWorkspace"),
+    )
+    mcp_servers: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ArgusExtensionConfig(BaseModel):
     """Argus-specific configuration extension.
 
     Fields are serialized with snake_case keys (e.g. ``collaboration_tree``,
@@ -88,7 +165,40 @@ class ArgusExtensionConfig(Base):
         return migrated
 
 
-class ArgusConfig(Config):
-    """Root configuration for Argus, extends nanobot's Config."""
+class ArgusConfig(BaseModel):
+    """Root configuration for Argus."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
+    workspace: str = "~/.argus"
+    agents: AgentsConfig = Field(default_factory=AgentsConfig)
+    providers: dict[str, ProviderConfig] = Field(default_factory=dict)
+    tools: ToolConfig = Field(default_factory=ToolConfig)
     argus: ArgusExtensionConfig = Field(default_factory=ArgusExtensionConfig)
+
+    @property
+    def workspace_path(self) -> Path:
+        """Return the expanded workspace path."""
+        return Path(self.workspace).expanduser()
+
+    def get_provider(self, model: str | None = None) -> ProviderConfig | None:
+        """Return the provider config for a model, or None if not configured."""
+        provider_name = self.get_provider_name(model)
+        if provider_name is None:
+            return None
+        return self.providers.get(provider_name)
+
+    def get_provider_name(self, model: str | None = None) -> str | None:
+        """Resolve the provider name for a model."""
+        if model is None:
+            return self.agents.defaults.provider
+        # Model strings like "provider/model" or "provider/model/name"
+        parts = model.split("/")
+        if len(parts) > 1 and parts[0] in self.providers:
+            return parts[0]
+        return self.agents.defaults.provider
+
+    def get_api_base(self, model: str | None = None) -> str | None:
+        """Return the API base URL for a model's provider."""
+        provider = self.get_provider(model)
+        return provider.api_base if provider else None

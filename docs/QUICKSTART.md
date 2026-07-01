@@ -6,7 +6,6 @@
 
 - Python 3.11 或更高版本
 - （可选）Node.js 18+ 与 npm，用于构建/运行 Tauri GUI 前端
-- 一个有效的 LLM Provider 配置（OpenAI、Anthropic、Azure OpenAI 等），用于 Agent 节点推理
 
 ## 安装
 
@@ -19,7 +18,7 @@ pip install -e .
 验证安装：
 
 ```bash
-python -c "import argus; import nanobot; print('ok')"
+python -c "import argus; print('ok')"
 argus --help
 ```
 
@@ -51,7 +50,7 @@ argus onboard
 
 ### 配置说明
 
-`~/.argus/config.json` 在 nanobot 配置基础上新增 `argus` 字段：
+`~/.argus/config.json` 包含 Argus 专属 `argus` 字段：
 
 ```json
 {
@@ -65,8 +64,6 @@ argus onboard
   }
 }
 ```
-
-同时请确保 `providers` 中至少配置一个可用的 LLM Provider，例如 OpenAI 兼容服务。
 
 ## 编写第一个协作树配置
 
@@ -127,7 +124,7 @@ argus gateway
 Gateway 会：
 
 1. 加载 `~/.argus/config.json` 与 `~/.argus/collaboration_tree.yaml`
-2. 为每个 `agent` 节点创建并启动 nanobot `AgentLoop`
+2. 为每个 `agent` 节点创建并启动内置 Agent 运行时
 3. 启动 `ArgusBus` 消息总线与 `MessageRouter` 路由引擎
 4. 启动 GUI 后端 HTTP/WebSocket 服务（默认 `http://127.0.0.1:18792`）
 5. 进入事件循环，等待 `Ctrl+C` 优雅关闭

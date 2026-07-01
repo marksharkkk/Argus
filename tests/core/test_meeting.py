@@ -35,7 +35,7 @@ def tree() -> CollaborationTree:
 
 
 class FakeAgent:
-    """Minimal stand-in for a nanobot agent that echoes a response via the bus."""
+    """Minimal stand-in for an agent that echoes a response via the bus."""
 
     def __init__(self, node_id: str, bus: ArgusBus) -> None:
         self.node_id = node_id
