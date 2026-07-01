@@ -38,6 +38,7 @@ htmlcov/
 # Local runtime data / secrets
 .mock-argus/
 .real-test-argus/
+nanobot_workspace/
 
 # Runtime-generated memory content (keep sample .md files and .gitkeep placeholders)
 memory/human_inboxes/
