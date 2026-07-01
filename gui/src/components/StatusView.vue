@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { fetchJson } from '../api'
+import { t } from '../i18n'
 import type { ArgusNode } from '../types'
 
 const nodes = ref<ArgusNode[]>([])
@@ -25,14 +26,14 @@ async function load() {
 
 <template>
   <div class="status-view">
-    <h2>节点状态</h2>
+    <h2>{{ t('status') }}</h2>
     <div class="table-wrap">
       <table>
       <thead>
         <tr>
           <th>ID</th>
-          <th>Label</th>
-          <th>Type</th>
+          <th>{{ t('node') }}</th>
+          <th>{{ t('type') }}</th>
           <th>Running</th>
           <th>Inbound</th>
           <th>Outbound</th>

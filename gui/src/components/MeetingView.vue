@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { fetchJson, connectWebSocket } from '../api'
+import { t } from '../i18n'
 import type { Meeting, ArgusNode } from '../types'
 
 const nodes = ref<ArgusNode[]>([])
@@ -87,8 +88,8 @@ async function updateTopic() {
 <template>
   <div class="meeting-view">
     <aside class="meeting-list">
-      <h3>会议</h3>
-      <div v-if="meetings.length === 0" class="empty-list">暂无会议</div>
+      <h3>{{ t('meetings') }}</h3>
+      <div v-if="meetings.length === 0" class="empty-list">{{ t('noMeetings') }}</div>
       <button v-for="m in meetings" :key="m.id" :class="{ active: selectedMeeting?.id === m.id }" @click="loadMeeting(m.id)">
         <span class="status-dot" :class="m.status" />
         {{ m.topic }}
@@ -96,28 +97,28 @@ async function updateTopic() {
     </aside>
 
     <div class="meeting-form">
-      <h3>发起会议</h3>
-      <label>组织者</label>
+      <h3>{{ t('startMeeting') }}</h3>
+      <label>{{ t('node') }}</label>
       <select v-model="organizer">
         <option v-for="n in nodes" :key="n.id" :value="n.id">{{ n.label }} ({{ n.id }})</option>
       </select>
-      <label>参与者</label>
+      <label>{{ t('participants') }}</label>
       <div class="participant-checks">
         <label v-for="n in nodes" :key="n.id">
           <input v-model="participants" type="checkbox" :value="n.id" />
           {{ n.label }}
         </label>
       </div>
-      <label>主题</label>
+      <label>{{ t('topic') }}</label>
       <input v-model="topic" />
-      <button @click="createMeeting">发起会议</button>
+      <button @click="createMeeting">{{ t('startMeeting') }}</button>
 
       <div v-if="selectedMeeting" class="meeting-detail">
         <h4>{{ selectedMeeting.topic }}</h4>
         <p class="meta-line">
-          组织者: {{ selectedMeeting.organizer }}
-          | 参与者: {{ selectedMeeting.participants.join(', ') }}
-          | 状态: <span class="status-badge" :class="selectedMeeting.status">{{ selectedMeeting.status }}</span>
+          {{ t('node') }}: {{ selectedMeeting.organizer }}
+          | {{ t('participants') }}: {{ selectedMeeting.participants.join(', ') }}
+          | {{ t('status') }}: <span class="status-badge" :class="selectedMeeting.status">{{ selectedMeeting.status }}</span>
         </p>
         <div class="history">
           <div v-for="(entry, idx) in selectedMeeting.messages" :key="idx" class="entry">
@@ -127,15 +128,15 @@ async function updateTopic() {
           </div>
         </div>
         <div v-if="selectedMeeting.status === 'running'" class="takeover">
-          <h4>Human 接管</h4>
+          <h4>Human Takeover</h4>
           <div class="takeover-row">
-            <button class="secondary" @click="skipTurn">跳过当前发言</button>
+            <button class="secondary" @click="skipTurn">{{ t('turnSkipped') || 'Skip turn' }}</button>
           </div>
           <div class="takeover-row">
-            <input v-model="takeoverTopic" placeholder="新主题" />
-            <button class="secondary" @click="updateTopic">更新主题</button>
+            <input v-model="takeoverTopic" :placeholder="t('topic')" />
+            <button class="secondary" @click="updateTopic">{{ t('meetingTopicUpdated') || 'Update topic' }}</button>
           </div>
-          <button class="danger" @click="closeMeeting">结束会议</button>
+          <button class="danger" @click="closeMeeting">{{ t('closeMeeting') }}</button>
         </div>
       </div>
     </div>

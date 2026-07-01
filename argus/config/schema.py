@@ -124,6 +124,11 @@ class ArgusExtensionConfig(BaseModel):
         alias="api_port",
         validation_alias=AliasChoices("api_port", "apiPort"),
     )
+    language: str = Field(
+        default="zh",
+        alias="language",
+        validation_alias=AliasChoices("language"),
+    )
 
     @model_validator(mode="before")
     @classmethod

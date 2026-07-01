@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { fetchJson, connectWebSocket } from '../api'
+import { t } from '../i18n'
 import type { ArgusMessage, ArgusNode } from '../types'
 
 const props = defineProps<{ nodeId: string | null }>()
@@ -67,7 +68,7 @@ async function send() {
     body: JSON.stringify({ from_id: props.nodeId, to, text: text.value }),
   })
   text.value = ''
-  status.value = '已发送'
+  status.value = t('send')
   setTimeout(() => (status.value = ''), 1500)
   await loadMessages()
 }
@@ -79,20 +80,20 @@ function insertMention(id: string) {
 
 <template>
   <div class="chat-view">
-    <div v-if="!nodeId" class="empty">请在 Tree 视图中选择一个节点</div>
+    <div v-if="!nodeId" class="empty">{{ t('loading') }}</div>
     <template v-else>
       <div class="chat-header">
-        <h3>节点: {{ nodeId }}</h3>
-        <label><input v-model="isGroup" type="checkbox" /> 群聊</label>
+        <h3>{{ t('node') }}: {{ nodeId }}</h3>
+        <label><input v-model="isGroup" type="checkbox" /> {{ t('chat') }}</label>
         <span v-if="status" class="status">{{ status }}</span>
       </div>
       <div class="mentions">
-        <span>提及:</span>
+        <span>{{ t('target') }}:</span>
         <button v-for="n in nodes" :key="n.id" @click="insertMention(n.id)">@{{ n.id }}</button>
       </div>
       <div class="messages">
         <div v-if="messages.length === 0" class="empty-msgs">
-          暂无消息，发送一条开始对话
+          {{ t('noMessages') }}
         </div>
         <div
           v-for="msg in messages"
@@ -109,8 +110,8 @@ function insertMention(id: string) {
         </div>
       </div>
       <div class="composer">
-        <textarea v-model="text" rows="2" placeholder="输入消息，使用 @node_id 提及" @keydown.enter.prevent="send" />
-        <button @click="send">发送</button>
+        <textarea v-model="text" rows="2" :placeholder="`${t('message')}...`" @keydown.enter.prevent="send" />
+        <button @click="send">{{ t('send') }}</button>
       </div>
     </template>
   </div>

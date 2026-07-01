@@ -21,6 +21,7 @@ from argus.config.schema import ArgusConfig
 from argus.core.message import ArgusMessage
 from argus.core.orchestrator import ArgusOrchestrator
 from argus.core.tree import CollaborationTree, parse_mentions
+from argus.i18n import t
 from argus.memory.store import MemoryStore
 
 app = typer.Typer(
@@ -111,10 +112,13 @@ def onboard() -> None:
         (memory_dir / layer).mkdir(parents=True, exist_ok=True)
 
     config_path = argus_dir / "config.json"
+    config: ArgusConfig | None = None
     if not config_path.exists():
-        save_argus_config(ArgusConfig(), config_path)
-        _success(f"Created default configuration: {config_path}")
+        config = ArgusConfig()
+        save_argus_config(config, config_path)
+        _success(f"{t('workspace_initialized')}: {config_path}")
     else:
+        config = load_argus_config(config_path)
         _info(f"Configuration already exists: {config_path}")
 
     tree_path = argus_dir / "collaboration_tree.yaml"
@@ -135,7 +139,8 @@ def onboard() -> None:
         else:
             _info(f"Team memory file already exists: {path}")
 
-    console.print("[bold green]Argus is ready![/bold green]")
+    ready_text = t("onboard_done", config)
+    console.print(f"[bold green]{ready_text}[/bold green]")
     console.print("")
     console.print(f"Home: [cyan]{argus_dir}[/cyan]")
     console.print(f"Config: [cyan]{config_path}[/cyan]")
@@ -169,8 +174,9 @@ def gateway(
     async def _run() -> None:
         _write_pid_file(pid_path)
         try:
+            start_text = t("gateway_started", config)
             console.print(
-                f"[bold green]Starting Argus gateway[/bold green] with {len(tree.nodes)} tree nodes"
+                f"[bold green]{start_text}[/bold green] with {len(tree.nodes)} tree nodes"
             )
             await orchestrator.run()
         finally:
@@ -179,11 +185,11 @@ def gateway(
     try:
         asyncio.run(_run())
     except KeyboardInterrupt:
-        console.print("\n[yellow]Gateway interrupted by user[/yellow]")
+        console.print(f"\n[yellow]{t('cancelled', config)}[/yellow]")
     finally:
         _remove_pid_file(pid_path)
 
-    console.print("[bold green]Gateway stopped[/bold green]")
+    console.print(f"[bold green]{t('gateway_stopped', config)}[/bold green]")
 
 
 @app.command()
@@ -265,8 +271,9 @@ def agent(
 
     async def _run() -> None:
         await orchestrator.start()
+        joined_text = t("agent_joined", config)
         console.print(
-            f"[bold green]Joined as human node '{node}'[/bold green] "
+            f"[bold green]{joined_text} '{node}'[/bold green] "
             f"({human_node.label}). Type /quit or press Ctrl+C to exit."
         )
         if message:
@@ -305,7 +312,7 @@ def agent(
                 pass
         loop.close()
 
-    console.print("[bold green]Agent mode exited[/bold green]")
+    console.print(f"[bold green]{t('agent_exited', config)}[/bold green]")
 
 
 @app.command()
@@ -329,10 +336,10 @@ def status() -> None:
             console.print("[yellow]Gateway status file is unreadable.[/yellow]")
         else:
             console.print(
-                f"[bold green]Gateway is running[/bold green] (pid: {pid}, "
+                f"[bold green]{t('gateway_started', config)}[/bold green] (pid: {pid}, "
                 f"heartbeat: {data.get('timestamp', 'unknown')})"
             )
-            table = Table(title="Node Status")
+            table = Table(title=t("status_header", config))
             table.add_column("Node", style="cyan")
             table.add_column("Type", style="magenta")
             table.add_column("Status", style="green")
@@ -353,7 +360,7 @@ def status() -> None:
                 table.add_row(node.id, node.type, f"{status_text}{extra}")
             console.print(table)
     else:
-        console.print("[bold yellow]Gateway is not running[/bold yellow]")
+        console.print(f"[bold yellow]{t('gateway_stopped', config)}[/bold yellow]")
         console.print(Rule("Collaboration Tree"))
         table = Table(title=f"{len(tree.nodes)} nodes, {len(tree.edges)} edges")
         table.add_column("ID", style="cyan")

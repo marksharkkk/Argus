@@ -5,6 +5,7 @@ import ChatView from './components/ChatView.vue'
 import MeetingView from './components/MeetingView.vue'
 import StatusView from './components/StatusView.vue'
 import { fetchJson, connectWebSocket } from './api'
+import { t, initLanguage, setLanguage, language } from './i18n'
 import type { ArgusNode } from './types'
 
 const view = ref<'tree' | 'chat' | 'meeting' | 'status'>('tree')
@@ -14,14 +15,18 @@ let ws: WebSocket | null = null
 
 onMounted(async () => {
   let nodes: ArgusNode[] = []
+  let configLang = 'zh'
   for (let i = 0; i < 10; i++) {
     try {
+      const config = await fetchJson('/api/config')
+      configLang = config.language || configLang
       nodes = await fetchJson('/api/nodes')
       break
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 500))
     }
   }
+  initLanguage(configLang)
   const human = nodes.find((n) => n.type === 'human')
   selectedNode.value = human ? human.id : (nodes[0]?.id ?? null)
 
@@ -40,20 +45,29 @@ onMounted(async () => {
 onUnmounted(() => {
   ws?.close()
 })
+
+function switchLang(lang: 'zh' | 'en') {
+  setLanguage(lang)
+}
 </script>
 
 <template>
   <div class="app-layout">
     <aside class="sidebar">
-      <h1>Argus</h1>
+      <h1>{{ t('appTitle') }}</h1>
       <nav>
-        <button :class="{ active: view === 'tree' }" @click="view = 'tree'">Tree</button>
-        <button :class="{ active: view === 'chat' }" @click="view = 'chat'">Chat</button>
-        <button :class="{ active: view === 'meeting' }" @click="view = 'meeting'">Meeting</button>
-        <button :class="{ active: view === 'status' }" @click="view = 'status'">Status</button>
+        <button :class="{ active: view === 'tree' }" @click="view = 'tree'">{{ t('tree') }}</button>
+        <button :class="{ active: view === 'chat' }" @click="view = 'chat'">{{ t('chat') }}</button>
+        <button :class="{ active: view === 'meeting' }" @click="view = 'meeting'">{{ t('meeting') }}</button>
+        <button :class="{ active: view === 'status' }" @click="view = 'status'">{{ t('status') }}</button>
       </nav>
+      <div class="lang-switch">
+        <span>{{ t('language') }}:</span>
+        <button :class="{ active: language === 'zh' }" @click="switchLang('zh')">中</button>
+        <button :class="{ active: language === 'en' }" @click="switchLang('en')">En</button>
+      </div>
       <div class="status-dot" :class="wsStatus">
-        {{ wsStatus === 'connected' ? '● 实时已连接' : '● 实时断开' }}
+        {{ wsStatus === 'connected' ? t('connected') : t('disconnected') }}
       </div>
     </aside>
     <main class="main">
@@ -73,7 +87,7 @@ onUnmounted(() => {
 }
 
 .sidebar {
-  width: 140px;
+  width: 160px;
   background: var(--panel);
   border-right: 1px solid var(--border);
   display: flex;
@@ -94,7 +108,8 @@ onUnmounted(() => {
   gap: 0.5rem;
 }
 
-.sidebar nav button {
+.sidebar nav button,
+.lang-switch button {
   text-align: left;
   background: transparent;
   color: var(--text);
@@ -102,9 +117,25 @@ onUnmounted(() => {
 }
 
 .sidebar nav button.active,
-.sidebar nav button:hover {
+.sidebar nav button:hover,
+.lang-switch button.active,
+.lang-switch button:hover {
   background: rgba(56, 189, 248, 0.15);
   border-color: var(--accent);
+}
+
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.lang-switch button {
+  padding: 0.15rem 0.4rem;
+  text-align: center;
+  min-width: 1.8rem;
 }
 
 .status-dot {

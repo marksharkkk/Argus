@@ -1,5 +1,7 @@
 # Argus
 
+[English](README_EN.md) | [中文](README.md)
+
 Argus 是一个多 Agent 协作编排平台，让人类可以通过协作树（Collaboration Tree）自由定义自己与多个 AI Agent 的通信拓扑，实现私聊、群聊、会议等原生多 Agent 协作模式，并建立可传承的团队记忆系统。
 
 ## 核心特性

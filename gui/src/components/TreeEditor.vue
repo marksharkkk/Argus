@@ -5,6 +5,7 @@ import { Background } from '@vue-flow/background'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 import { fetchJson } from '../api'
+import { t, language } from '../i18n'
 import type { ArgusNode, ArgusEdge, ArgusTree } from '../types'
 
 const props = defineProps<{ selected?: string | null }>()
@@ -132,12 +133,12 @@ function onDrop(event: DragEvent) {
     id,
     type: 'default',
     position,
-    label: type === 'human' ? '新人类' : '新 Agent',
+    label: type === 'human' ? t('humanNode') : t('agentNode'),
     class: type,
     data: {
       raw: {
         id,
-        label: type === 'human' ? '新人类' : '新 Agent',
+        label: type === 'human' ? t('humanNode') : t('agentNode'),
         type,
         metadata: {},
         ...(type === 'agent' ? { agent_id: id } : {}),
@@ -162,7 +163,7 @@ async function saveTree() {
     method: 'POST',
     body: JSON.stringify({ nodes, edges }),
   })
-  saveStatus.value = '已保存'
+  saveStatus.value = t('saved')
   setTimeout(() => (saveStatus.value = ''), 2000)
 }
 
@@ -182,14 +183,14 @@ function formatMeta(value: Record<string, any> | undefined): string {
 <template>
   <div class="tree-editor">
     <div class="palette">
-      <h3>节点</h3>
+      <h3>{{ t('tree') }}</h3>
       <div class="draggable human" draggable="true" @dragstart="onDragStart($event, 'human')">
-        人类节点
+        {{ t('humanNode') }}
       </div>
       <div class="draggable agent" draggable="true" @dragstart="onDragStart($event, 'agent')">
-        Agent 节点
+        {{ t('agentNode') }}
       </div>
-      <button class="save-btn" @click="saveTree">保存协作树</button>
+      <button class="save-btn" @click="saveTree">{{ t('save') }}</button>
       <span v-if="saveStatus" class="save-status">{{ saveStatus }}</span>
     </div>
 
@@ -201,7 +202,7 @@ function formatMeta(value: Record<string, any> | undefined): string {
 
     <aside class="properties">
       <div v-if="selectedNode">
-        <h3>节点属性</h3>
+        <h3>{{ t('properties') }}</h3>
         <label>ID</label>
         <input v-model="selectedNode.data.raw.id" @change="updateNodeFromForm" />
         <label>Label</label>
@@ -221,17 +222,17 @@ function formatMeta(value: Record<string, any> | undefined): string {
         <textarea rows="4" :value="formatMeta(selectedNode.data.raw.metadata)" @change="selectedNode.data.raw.metadata = parseMeta(($event.target as HTMLTextAreaElement).value)" />
       </div>
       <div v-else-if="selectedEdge">
-        <h3>连线属性</h3>
+        <h3>{{ t('properties') }}</h3>
         <p>{{ selectedEdge.source }} → {{ selectedEdge.target }}</p>
         <label>
           <input type="checkbox" v-model="selectedEdge.data.raw.bidirectional" @change="updateEdgeBidirectional" />
-          双向
+          {{ language === 'zh' ? '双向' : 'Bidirectional' }}
         </label>
       </div>
       <div v-else class="hint">
-        选择一个节点或连线以编辑属性
+        {{ t('selectHint') }}
       </div>
-      <button v-if="selectedNode || selectedEdge" class="danger" @click="deleteSelected">删除选中</button>
+      <button v-if="selectedNode || selectedEdge" class="danger" @click="deleteSelected">{{ t('deleteSelected') }}</button>
     </aside>
   </div>
 </template>

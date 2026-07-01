@@ -174,6 +174,15 @@ def make_app(orchestrator: ArgusOrchestrator) -> FastAPI:
             agent.tree = tree
         return {"ok": True, "path": str(path)}
 
+    @app.get("/api/config")
+    def get_config() -> dict[str, Any]:
+        """Return Argus configuration exposed to the GUI frontend."""
+        return {
+            "language": orchestrator.config.argus.language,
+            "api_host": orchestrator.config.argus.api_host,
+            "api_port": orchestrator.config.argus.api_port,
+        }
+
     @app.get("/api/nodes")
     def get_nodes() -> list[dict[str, Any]]:
         return [node.model_dump(by_alias=True) for node in orchestrator.tree.nodes]
