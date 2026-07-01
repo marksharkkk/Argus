@@ -16,6 +16,7 @@ from typing import Any
 
 from loguru import logger
 
+from argus.adapters.llm_agent import LLMAgentNode
 from argus.adapters.mock_agent import MockAgentNode
 from argus.config.schema import ArgusConfig
 from argus.core.bus import ArgusBus
@@ -25,7 +26,7 @@ from argus.core.router import MessageRouter
 from argus.core.tree import CollaborationTree, Node
 from argus.memory.store import MemoryStore
 
-AgentFactory = Callable[[Node], MockAgentNode]
+AgentFactory = Callable[[Node], MockAgentNode | LLMAgentNode]
 
 
 class ArgusOrchestrator:
@@ -56,8 +57,10 @@ class ArgusOrchestrator:
             storage_dir=self._default_human_inbox_dir(),
         )
         self.router = MessageRouter(tree, self.bus, human_manager=self.human_manager)
-        self._agent_factory = agent_factory or self._mock_agent_factory
-        self._agents: dict[str, MockAgentNode] = {}
+        self._agent_factory = agent_factory or (
+            self._mock_agent_factory if mock else self._llm_agent_factory
+        )
+        self._agents: dict[str, MockAgentNode | LLMAgentNode] = {}
         self._registered_human_handlers: set[str] = set()
 
         self._health_task: asyncio.Task[Any] | None = None
@@ -80,6 +83,16 @@ class ArgusOrchestrator:
     def _mock_agent_factory(self, node: Node) -> MockAgentNode:
         """Create a mock agent node for smoke testing and demos."""
         return MockAgentNode(
+            node=node,
+            tree=self.tree,
+            argus_bus=self.bus,
+            config=self.config,
+            workspace=self.workspace,
+        )
+
+    def _llm_agent_factory(self, node: Node) -> LLMAgentNode:
+        """Create a real LLM-backed agent node."""
+        return LLMAgentNode(
             node=node,
             tree=self.tree,
             argus_bus=self.bus,

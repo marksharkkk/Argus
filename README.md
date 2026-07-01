@@ -8,8 +8,10 @@ Argus 是一个多 Agent 协作编排平台，让人类可以通过协作树（C
 - **私聊 / 群聊 / 广播**：基于协作树连线实现单聊、@mention 群聊、@all 广播，并自动过滤不可达节点。
 - **会议引擎**：发起会议后自动通知参与者、轮流请求 Agent 发言、广播发言内容、进入自由讨论并归档纪要。
 - **五层记忆传承**：项目记忆、团队最佳实践、Agent 成长档案、会议纪要库、协作模式库，支持基于项目类型推荐历史协作树。
+- **真实 LLM 驱动**：通过 OpenAI 兼容 API 接入 DeepSeek、OpenAI 等模型；Agent 使用 `argus_send_message` 工具在协作树中主动通信。
 - **可视化 GUI**：基于 Tauri 2.0 + Vue 3 的桌面客户端，支持拖拽编辑协作树、聊天视图、会议视图与状态面板。
 - **CLI Gateway**：`argus onboard` / `argus gateway` / `argus agent` / `argus status` 命令行入口。
+- **Mock 模式**：`scripts/start_gui_for_demo.py` 零 API 成本启动，适合演示和截图。
 
 ## 功能展示
 

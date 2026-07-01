@@ -13,7 +13,10 @@ from argus.core.message import ArgusMessage
 from argus.core.tree import CollaborationTree
 
 if TYPE_CHECKING:
+    from argus.adapters.llm_agent import LLMAgentNode
     from argus.adapters.mock_agent import MockAgentNode
+
+    AgentNode = MockAgentNode | LLMAgentNode
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +33,11 @@ class MessageRouter:
         self.tree = tree
         self.bus = bus
         self._human_manager = human_manager
-        self._agent_nodes: dict[str, MockAgentNode] = {}
+        self._agent_nodes: dict[str, AgentNode] = {}
         self._human_handlers: dict[str, HumanHandler] = {}
         self._subscribed_nodes: set[str] = set()
 
-    def register_agent_node(self, node_id: str, agent: MockAgentNode) -> None:
+    def register_agent_node(self, node_id: str, agent: AgentNode) -> None:
         """Register an agent node instance for the given tree node ID."""
         self._agent_nodes[node_id] = agent
 

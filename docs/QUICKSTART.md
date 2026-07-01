@@ -50,20 +50,38 @@ argus onboard
 
 ### 配置说明
 
-`~/.argus/config.json` 包含 Argus 专属 `argus` 字段：
+`~/.argus/config.json` 包含 Argus 专属 `argus` 字段，以及 LLM Provider 配置：
 
 ```json
 {
   "argus": {
-    "collaborationTree": "~/.argus/collaboration_tree.yaml",
-    "memoryDir": "~/.argus/memory",
-    "guiHost": "127.0.0.1",
-    "guiPort": 18791,
-    "apiHost": "127.0.0.1",
-    "apiPort": 18792
+    "collaboration_tree": "~/.argus/collaboration_tree.yaml",
+    "memory_dir": "~/.argus/memory",
+    "gui": {
+      "host": "127.0.0.1",
+      "port": 18791
+    },
+    "api_host": "127.0.0.1",
+    "api_port": 18792
+  },
+  "providers": {
+    "deepseek": {
+      "api_key": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "api_base": "https://api.deepseek.com/v1"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "deepseek/deepseek-v4-flash",
+      "provider": "deepseek"
+    }
   }
 }
 ```
+
+> 也兼容旧版 camelCase 写法（`collaborationTree`、`memoryDir`、`guiHost` 等），会自动迁移。
+
+模型名格式为 `provider/model`，例如 `deepseek/deepseek-v4-flash`。Agent 节点可通过 `model` 字段覆盖默认模型。
 
 ## 编写第一个协作树配置
 
@@ -79,7 +97,7 @@ nodes:
     label: "开发"
     type: agent
     agent_id: coding
-    model: openrouter/openai/gpt-4o
+    model: deepseek/deepseek-v4-flash
     metadata:
       role: "software developer"
       skills: ["python", "typescript"]
@@ -88,7 +106,7 @@ nodes:
     label: "写作"
     type: agent
     agent_id: writing
-    model: openrouter/openai/gpt-4o
+    model: deepseek/deepseek-v4-flash
     metadata:
       role: "technical writer"
       skills: ["documentation", "markdown"]
@@ -124,10 +142,20 @@ argus gateway
 Gateway 会：
 
 1. 加载 `~/.argus/config.json` 与 `~/.argus/collaboration_tree.yaml`
-2. 为每个 `agent` 节点创建并启动内置 Agent 运行时
+2. 为每个 `agent` 节点创建并启动真实 LLM Agent 运行时
 3. 启动 `ArgusBus` 消息总线与 `MessageRouter` 路由引擎
 4. 启动 GUI 后端 HTTP/WebSocket 服务（默认 `http://127.0.0.1:18792`）
 5. 进入事件循环，等待 `Ctrl+C` 优雅关闭
+
+### Mock 模式（零 API 成本演示）
+
+如果只想测试界面和编排逻辑，不想消耗 LLM API：
+
+```bash
+python scripts/start_gui_for_demo.py
+```
+
+该脚本会以 mock agent 启动，适合截图和本地体验。
 
 ### 启动 Tauri GUI（可选）
 
