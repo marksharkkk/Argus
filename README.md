@@ -30,7 +30,7 @@ Argus 是一个多 Agent 协作编排平台，让人类可以通过协作树（C
 需要 Python 3.11+。
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/marksharkkk/argus.git
 cd argus
 pip install -e .
 ```
