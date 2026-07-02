@@ -30,6 +30,9 @@ from argus.memory.store import MemoryStore
 BASE_DIR = Path(__file__).resolve().parents[1]
 CONFIG_PATH = BASE_DIR / ".real-test-argus" / "config.json"
 RESULT_PATH = BASE_DIR / ".real-test-argus" / "human_features_result.json"
+EXAMPLE_CONFIG_PATH = BASE_DIR / "config" / "example_config.json"
+EXAMPLE_TREE_PATH = BASE_DIR / "config" / "example_tree.yaml"
+TEST_TREE_PATH = BASE_DIR / ".real-test-argus" / "collaboration_tree.yaml"
 
 
 class ValidationError(Exception):
@@ -44,6 +47,41 @@ def _assert(condition: bool, message: str) -> None:
 def _no_llm_mode() -> bool:
     """Return True if the script should run without calling any LLM API."""
     return os.environ.get("NO_LLM", "").lower() in ("1", "true", "yes")
+
+
+def _ensure_test_workspace() -> None:
+    """Create a self-contained test workspace if it does not exist.
+
+    This allows the validation script to run in CI without requiring
+    ``argus onboard`` or a pre-populated ``~/.argus`` directory.
+    """
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not CONFIG_PATH.exists() and EXAMPLE_CONFIG_PATH.exists():
+        import shutil
+
+        shutil.copy2(EXAMPLE_CONFIG_PATH, CONFIG_PATH)
+        config_text = CONFIG_PATH.read_text(encoding="utf-8")
+        config_data = json.loads(config_text)
+        # Override paths to point inside the repo so CI can find them.
+        config_data.setdefault("argus", {})
+        config_data["argus"]["collaboration_tree"] = str(TEST_TREE_PATH)
+        config_data["argus"]["memory_dir"] = str(BASE_DIR / ".real-test-argus" / "memory")
+        config_data["argus"]["status_dir"] = str(BASE_DIR / ".real-test-argus" / "status")
+        config_data["argus"]["log_dir"] = str(BASE_DIR / ".real-test-argus" / "logs")
+        # Ensure providers use environment variables when available.
+        if "providers" in config_data:
+            for provider in config_data["providers"].values():
+                if isinstance(provider, dict):
+                    provider.setdefault("api_key", os.environ.get("LLM_API_KEY", "sk-placeholder"))
+        CONFIG_PATH.write_text(
+            json.dumps(config_data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    if not TEST_TREE_PATH.exists() and EXAMPLE_TREE_PATH.exists():
+        import shutil
+
+        shutil.copy2(EXAMPLE_TREE_PATH, TEST_TREE_PATH)
 
 
 async def _wait_for(
@@ -250,6 +288,7 @@ async def test_meeting_takeover(
 async def main() -> int:
     """Run all human-feature validations."""
     os.environ.setdefault("ARGUS_CONFIG_PATH", str(CONFIG_PATH))
+    _ensure_test_workspace()
     no_llm = _no_llm_mode()
     if no_llm:
         logger.info("运行模式: 无 LLM（mock agent + mock response_provider）")

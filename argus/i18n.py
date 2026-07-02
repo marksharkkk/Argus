@@ -141,9 +141,9 @@ DEFAULT_LANGUAGE = "zh"
 def get_system_language() -> str:
     """Return 'zh' if the system locale is Chinese-ish, otherwise 'en'."""
     try:
-        loc, _ = locale.getdefaultlocale()  # type: ignore[attr-defined]
-    except AttributeError:
         loc = locale.getlocale()[0]
+    except (AttributeError, ValueError):
+        loc = None
     if loc and loc.lower().startswith("zh"):
         return "zh"
     return "en"
