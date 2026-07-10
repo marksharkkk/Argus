@@ -18,14 +18,13 @@ import socketserver
 import sys
 import threading
 from pathlib import Path
+from typing import Any
 
 from argus.config.loader import load_argus_config
-from argus.config.schema import ArgusConfig
 from argus.core.orchestrator import ArgusOrchestrator
 from argus.core.tree import CollaborationTree
 from argus.gui.server import start_gui_server
 from argus.memory.store import MemoryStore
-
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 CONFIG_PATH = BASE_DIR / "config" / "example_config.json"
@@ -35,10 +34,13 @@ STATIC_DIR = BASE_DIR / "gui" / "dist"
 
 def start_static_server(host: str, port: int, directory: Path) -> threading.Thread:
     """Start a simple HTTP server for the static frontend build."""
-    handler = lambda *args, **kwargs: http.server.SimpleHTTPRequestHandler(
-        *args, directory=str(directory), **kwargs
-    )
-    server = socketserver.TCPServer((host, port), handler)
+
+    def _handler(*args: Any, **kwargs: Any) -> http.server.SimpleHTTPRequestHandler:
+        return http.server.SimpleHTTPRequestHandler(
+            *args, directory=str(directory), **kwargs
+        )
+
+    server = socketserver.TCPServer((host, port), _handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     return thread
@@ -67,7 +69,7 @@ async def main() -> int:
     static_port = api_port + 1
     start_static_server(static_host, static_port, STATIC_DIR)
 
-    print(f"Argus GUI demo running:")
+    print("Argus GUI demo running:")
     print(f"  API/WebSocket: http://{api_host}:{api_port}")
     print(f"  Web UI:        http://{static_host}:{static_port}")
     print("Press Ctrl+C to stop.")

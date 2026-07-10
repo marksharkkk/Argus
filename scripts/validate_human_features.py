@@ -19,13 +19,11 @@ from typing import Any
 from loguru import logger
 
 from argus.config.loader import get_argus_config_path, load_argus_config
-from argus.config.schema import ArgusConfig
 from argus.core.meeting import MeetingEngine
 from argus.core.message import ArgusMessage
 from argus.core.orchestrator import ArgusOrchestrator
 from argus.core.tree import CollaborationTree
 from argus.memory.store import MemoryStore
-
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 CONFIG_PATH = BASE_DIR / ".real-test-argus" / "config.json"

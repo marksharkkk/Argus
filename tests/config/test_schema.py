@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from argus.config.loader import load_argus_config, save_argus_config
 from argus.config.schema import ArgusConfig
 

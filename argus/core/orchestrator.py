@@ -21,7 +21,6 @@ from argus.adapters.mock_agent import MockAgentNode
 from argus.config.schema import ArgusConfig
 from argus.core.bus import ArgusBus
 from argus.core.human import HumanHandler, HumanNodeManager
-from argus.core.message import ArgusMessage
 from argus.core.router import MessageRouter
 from argus.core.tree import CollaborationTree, Node
 from argus.memory.store import MemoryStore

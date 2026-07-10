@@ -6,7 +6,6 @@ until the real image is returned (size differs from the placeholder).
 
 from __future__ import annotations
 
-import os
 import time
 import urllib.parse
 import urllib.request

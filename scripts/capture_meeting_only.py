@@ -2,6 +2,7 @@
 
 import asyncio
 from pathlib import Path
+
 from playwright.async_api import async_playwright
 
 BASE_URL = "http://127.0.0.1:18793"
