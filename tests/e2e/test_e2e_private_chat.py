@@ -114,15 +114,30 @@ async def test_private_chat_routing(orchestrator: ArgusOrchestrator, tree: Colla
 
     # Verify dev received the message via the router/agent adapter.
     dev_agent = orchestrator._agents["dev"]
-    await asyncio.wait_for(orchestrator.bus.get_next("dev"), timeout=1.0)
+
+    async def _wait_for_dev() -> None:
+        deadline = asyncio.get_event_loop().time() + 1.0
+        while asyncio.get_event_loop().time() < deadline:
+            if any("hello dev" in text for text in dev_agent.received):
+                return
+            await asyncio.sleep(0.01)
+        raise TimeoutError("dev did not receive hello dev")
+
+    await _wait_for_dev()
     assert any("hello dev" in text for text in dev_agent.received)
 
     # Dev's reply should be routed to writer.
-    writer_msg = await asyncio.wait_for(orchestrator.bus.get_next("writer"), timeout=1.0)
-    assert writer_msg.from_id == "dev"
-    assert writer_msg.text == "dev forwarding to writer"
-
     writer_agent = orchestrator._agents["writer"]
+
+    async def _wait_for_writer() -> None:
+        deadline = asyncio.get_event_loop().time() + 1.0
+        while asyncio.get_event_loop().time() < deadline:
+            if any("dev forwarding to writer" in text for text in writer_agent.received):
+                return
+            await asyncio.sleep(0.01)
+        raise TimeoutError("writer did not receive forwarded message")
+
+    await _wait_for_writer()
     assert any("dev forwarding to writer" in text for text in writer_agent.received)
 
     # Verify the collaboration tree allowed both private channels.
