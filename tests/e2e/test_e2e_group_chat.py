@@ -96,6 +96,16 @@ async def orchestrator(tree: CollaborationTree, tmp_path: Path):
         await orch.stop()
 
 
+async def _wait_for_text(received: list[str], text: str, timeout: float = 1.0) -> None:
+    """Poll until ``text`` appears in ``received`` or ``timeout`` elapses."""
+    deadline = asyncio.get_event_loop().time() + timeout
+    while asyncio.get_event_loop().time() < deadline:
+        if any(text in item for item in received):
+            return
+        await asyncio.sleep(0.01)
+    raise TimeoutError(f"expected {text!r} in received messages")
+
+
 async def test_group_chat_at_all(orchestrator: ArgusOrchestrator, tree: CollaborationTree) -> None:
     """Human sends a broadcast '@all' and both reachable agents receive it."""
     human_messages: list[ArgusMessage] = []
@@ -108,14 +118,10 @@ async def test_group_chat_at_all(orchestrator: ArgusOrchestrator, tree: Collabor
 
     await orchestrator.bus.send_group_async("human", "@all 大家注意一下")
 
-    # Allow dispatch + router callbacks to settle.
-    await asyncio.sleep(0.1)
-
-    dev_texts = orchestrator._agents["dev"].received
-    writer_texts = orchestrator._agents["writer"].received
-
-    assert any("@all 大家注意一下" in text for text in dev_texts)
-    assert any("@all 大家注意一下" in text for text in writer_texts)
+    dev_agent = orchestrator._agents["dev"]
+    writer_agent = orchestrator._agents["writer"]
+    await _wait_for_text(dev_agent.received, "@all 大家注意一下")
+    await _wait_for_text(writer_agent.received, "@all 大家注意一下")
 
     await orchestrator.stop()
 
@@ -134,12 +140,9 @@ async def test_group_chat_mentions(orchestrator: ArgusOrchestrator, tree: Collab
         "human", "@dev @writer 开会讨论一下", to=["dev", "writer"]
     )
 
-    await asyncio.sleep(0.1)
-
-    dev_texts = orchestrator._agents["dev"].received
-    writer_texts = orchestrator._agents["writer"].received
-
-    assert any("@dev @writer 开会讨论一下" in text for text in dev_texts)
-    assert any("@dev @writer 开会讨论一下" in text for text in writer_texts)
+    dev_agent = orchestrator._agents["dev"]
+    writer_agent = orchestrator._agents["writer"]
+    await _wait_for_text(dev_agent.received, "@dev @writer 开会讨论一下")
+    await _wait_for_text(writer_agent.received, "@dev @writer 开会讨论一下")
 
     await orchestrator.stop()

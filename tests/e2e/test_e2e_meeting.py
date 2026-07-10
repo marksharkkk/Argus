@@ -131,6 +131,28 @@ async def meeting_setup(tree: CollaborationTree, tmp_path: Path):
     await orch.stop()
 
 
+async def _wait_for_message_text(
+    messages: list[ArgusMessage], text: str, timeout: float = 2.0
+) -> None:
+    """Poll until ``text`` appears in any message's text or ``timeout`` elapses."""
+    deadline = asyncio.get_event_loop().time() + timeout
+    while asyncio.get_event_loop().time() < deadline:
+        if any(text in m.text for m in messages):
+            return
+        await asyncio.sleep(0.01)
+    raise TimeoutError(f"expected {text!r} in messages")
+
+
+async def _wait_for_path(path: Path, timeout: float = 1.0) -> None:
+    """Poll until ``path`` exists or ``timeout`` elapses."""
+    deadline = asyncio.get_event_loop().time() + timeout
+    while asyncio.get_event_loop().time() < deadline:
+        if path.exists():
+            return
+        await asyncio.sleep(0.01)
+    raise TimeoutError(f"expected path to exist: {path}")
+
+
 async def test_meeting_round_robin_broadcast_and_archive(
     meeting_setup: tuple[
         ArgusOrchestrator, MeetingEngine, list[ArgusMessage], list[ArgusMessage], MemoryStore
@@ -151,7 +173,7 @@ async def test_meeting_round_robin_broadcast_and_archive(
     assert set(meeting.participants) == {"human", "dev", "writer"}
 
     # Wait for fake agents to answer and broadcasts to settle.
-    await asyncio.sleep(0.2)
+    await _wait_for_message_text(bus_messages, "现在进入自由讨论阶段", timeout=2.0)
 
     # Messages targeted at human on the bus include the start notice and broadcasts.
     bus_texts = [m.text for m in bus_messages]
@@ -174,11 +196,9 @@ async def test_meeting_round_robin_broadcast_and_archive(
     assert closed.status == "closed"
     assert closed.closed_at is not None
 
-    await asyncio.sleep(0.1)
-
     # Verify meeting archive was written to the memory store.
     archive_path = tmp_path / "memory" / "meetings" / f"{meeting.created_at:%Y-%m-%d}.md"
-    assert archive_path.exists()
+    await _wait_for_path(archive_path)
     content = archive_path.read_text(encoding="utf-8")
     assert "技术栈选型" in content
     assert "dev 认为应该使用 Python。" in content
